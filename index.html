@@ -1,0 +1,881 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>[hidden]{display:none!important}body{margin:0}img{max-width:100%}</style>
+</head>
+<body>
+<title>ศูนย์บริการช่างเซอร์วิส</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Thai+Looped:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: ERP module shell (same family as 3.1) — header + flow line + tabs; job list → job detail (steps column + handoff side column) */
+:root{
+  --bg:#f2f5f5; --surface:#ffffff; --surface-2:#f6f9f9; --ink:#162a2c; --muted:#5a6e70; --line:#d8e2e1;
+  --accent:#0c5c60; --accent-ink:#ffffff; --accent-soft:#e0efed;
+  --ok:#1b7a45; --ok-soft:#e2f2e8; --warn:#9a620c; --warn-soft:#fbefd9; --bad:#b0352a; --bad-soft:#fbe4e1; --info:#2c5b99; --info-soft:#e3ebf7;
+  --plate-bg:#ffffff; --plate-ink:#111111; --plate-edge:#1a1a1a;
+  --shadow:0 1px 2px rgba(16,40,42,.06);
+  --font:"IBM Plex Sans Thai Looped","Noto Sans Thai",Tahoma,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0e1617; --surface:#152022; --surface-2:#1a282a; --ink:#e1ebea; --muted:#93a7a8; --line:#27393b;
+  --accent:#55b3ad; --accent-ink:#082022; --accent-soft:#173335;
+  --ok:#4fc386; --ok-soft:#163224; --warn:#e3aa50; --warn-soft:#3a2c13; --bad:#f17d70; --bad-soft:#3d1c19; --info:#86aee8; --info-soft:#1a2a40;
+  --plate-bg:#ffffff; --plate-ink:#111111; --plate-edge:#000000;
+  --shadow:none; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0e1617; --surface:#152022; --surface-2:#1a282a; --ink:#e1ebea; --muted:#93a7a8; --line:#27393b;
+  --accent:#55b3ad; --accent-ink:#082022; --accent-soft:#173335;
+  --ok:#4fc386; --ok-soft:#163224; --warn:#e3aa50; --warn-soft:#3a2c13; --bad:#f17d70; --bad-soft:#3d1c19; --info:#86aee8; --info-soft:#1a2a40;
+  --plate-bg:#ffffff; --plate-ink:#111111; --plate-edge:#000000;
+  --shadow:none; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.55;padding-inline:16px;padding-block:0 48px}
+.wrap{max-width:1180px;margin:0 auto}
+h1,h2,h3{margin:0;line-height:1.3;text-wrap:balance}
+p{margin:0}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* header */
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding-block:18px 10px}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.mod{display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:var(--accent);color:var(--accent-ink);font-weight:700;font-family:var(--mono);font-size:15px;flex:none}
+.brand h1{font-size:21px;font-weight:700}
+.sub{color:var(--muted);font-size:13px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tag{background:var(--warn-soft);color:var(--warn);border-radius:999px;padding:1px 9px;font-size:12px;font-weight:600}
+.who{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 6px 4px 14px}
+.who select{border:0;background:var(--accent-soft);color:var(--ink);border-radius:999px;padding:5px 10px;font-weight:600}
+.flow{font-size:13px;color:var(--muted);padding-block:2px 12px}
+.flow b{color:var(--ink)}
+.tabs{display:flex;gap:4px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px 12px 0 0;padding:6px 6px 0;overflow-x:auto}
+.tabs button{border:1px solid transparent;border-bottom:0;background:none;padding:9px 16px;border-radius:9px 9px 0 0;color:var(--muted);font-weight:600;white-space:nowrap;display:flex;gap:6px;align-items:center}
+.tabs button[aria-selected="true"]{background:var(--surface);border-color:var(--accent);color:var(--accent);box-shadow:0 2px 0 var(--surface)}
+.count{background:var(--accent-soft);color:var(--accent);border-radius:999px;font-size:12px;padding:0 8px;font-family:var(--mono)}
+main{border-top:2px solid var(--accent);padding-top:18px;display:grid;gap:16px}
+.note{font-size:13px;color:var(--muted);background:var(--surface);border:1px dashed var(--line);border-radius:var(--r);padding:10px 14px}
+.note b{color:var(--ink)}
+.banner-bad{background:var(--bad-soft);color:var(--bad);border-radius:var(--r);padding:10px 14px;font-size:13px}
+
+/* kpis */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(170px,100%),1fr));gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;box-shadow:var(--shadow)}
+.kpi .k{font-size:13px;color:var(--muted)}
+.kpi .v{font-size:28px;font-weight:700;line-height:1.2;font-variant-numeric:tabular-nums}
+.kpi .v small{font-size:17px;font-weight:600}
+.kpi .d{font-size:12.5px;color:var(--muted)}
+.kpi.hl .v{color:var(--accent)}
+
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;background:var(--surface);padding:3px}
+.seg button{border:0;background:none;border-radius:999px;padding:5px 14px;font-size:13.5px;color:var(--muted);font-weight:600}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:8px 14px;font-weight:600;display:inline-flex;align-items:center;gap:6px;min-height:40px}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.45;cursor:not-allowed;filter:none}
+.btn.sm{min-height:32px;padding:4px 10px;font-size:13px}
+.btn.ghost{background:none;border-color:transparent;color:var(--accent);padding-inline:6px}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.link{border:0;background:none;padding:0;color:var(--accent);font-weight:600;text-decoration:underline;text-underline-offset:2px}
+
+/* plate */
+.plate{display:inline-flex;flex-direction:column;align-items:center;background:var(--plate-bg);color:var(--plate-ink);border:2px solid var(--plate-edge);border-radius:6px;padding:1px 10px 2px;line-height:1.15;flex:none;box-shadow:inset 0 0 0 2px #fff,inset 0 0 0 3px #999}
+.plate .n{font-weight:700;font-size:17px;letter-spacing:.02em;white-space:nowrap}
+.plate .p{font-size:10px;white-space:nowrap}
+.plate.lg .n{font-size:24px}.plate.lg .p{font-size:12px}
+.plate.sm{padding:0 7px 1px;border-width:1.5px}.plate.sm .n{font-size:13.5px}.plate.sm .p{font-size:8.5px}
+
+/* pills */
+.pill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:2px 10px;font-size:12.5px;font-weight:600;white-space:nowrap;flex:none}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.p-ok{background:var(--ok-soft);color:var(--ok)}.p-warn{background:var(--warn-soft);color:var(--warn)}.p-bad{background:var(--bad-soft);color:var(--bad)}
+.p-info{background:var(--info-soft);color:var(--info)}.p-accent{background:var(--accent-soft);color:var(--accent)}.p-muted{background:var(--surface-2);color:var(--muted);border:1px solid var(--line)}
+
+/* job cards */
+.jobgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(330px,100%),1fr));gap:12px}
+.jobcard{all:unset;box-sizing:border-box;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:grid;gap:10px;box-shadow:var(--shadow);min-width:0}
+.jobcard:hover{border-color:var(--accent)}
+.jobcard:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.jc-top{display:flex;gap:12px;align-items:flex-start;justify-content:space-between}
+.jc-car{display:flex;gap:12px;align-items:center;min-width:0}
+.jc-car .t{font-weight:600;line-height:1.3}
+.jc-car .s{font-size:12.5px;color:var(--muted)}
+.meta{font-size:12.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 12px}
+.prog{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--muted)}
+.bar{flex:1;height:6px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:999px}
+.techs{font-size:13px}
+.techs b{font-weight:600}
+.empty{color:var(--muted);text-align:center;padding:28px;background:var(--surface);border:1px dashed var(--line);border-radius:var(--r)}
+
+/* detail */
+.back{align-self:start;justify-self:start}
+.jobhead{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-wrap:wrap;gap:14px 20px;align-items:center;box-shadow:var(--shadow)}
+.jh-main{flex:1;min-width:220px;display:grid;gap:2px}
+.jh-main .t{font-size:18px;font-weight:700}
+.jh-main .meta{font-size:13px}
+.detail{display:grid;gap:16px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:980px){.detail{grid-template-columns:minmax(0,1fr) 340px;align-items:start}}
+.steps{display:grid;gap:12px;min-width:0}
+.step{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:grid;gap:12px;box-shadow:var(--shadow);min-width:0}
+.step.s-active{border-color:var(--warn)}
+.step.s-done{border-color:color-mix(in srgb,var(--ok) 45%,var(--line))}
+.step.s-locked{opacity:.62}
+.step-h{display:flex;gap:12px;align-items:flex-start}
+.stepno{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--surface-2);border:1px solid var(--line);font-family:var(--mono);font-weight:600;flex:none}
+.s-done .stepno{background:var(--ok);border-color:var(--ok);color:var(--surface)}
+.s-active .stepno{background:var(--warn-soft);border-color:var(--warn);color:var(--warn)}
+.step-t{flex:1;min-width:0}
+.step-t h3{font-size:16.5px;font-weight:700}
+.hint{font-size:13px;color:var(--muted)}
+.slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.slot{position:relative;border-radius:9px;aspect-ratio:4/3;max-width:100%;overflow:hidden;background:var(--surface-2);border:1.5px dashed var(--line);display:flex}
+label.slot.empty{cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;padding:10px;color:var(--accent);font-weight:600;font-size:13.5px}
+label.slot.empty:hover{border-color:var(--accent);background:var(--accent-soft)}
+label.slot.empty:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.slot.empty .req{font-size:11.5px;color:var(--muted);font-weight:500}
+.slot.missing{color:var(--muted);flex-direction:column;align-items:center;justify-content:center;font-size:13px}
+.slot.filled{border:1px solid var(--line);aspect-ratio:auto;flex-direction:column;background:var(--surface)}
+.slot .ph{display:block;width:100%;aspect-ratio:4/3;max-width:100%;border:0;padding:0;background:#111;cursor:zoom-in}
+.slot .ph img{width:100%;height:100%;object-fit:contain;display:block}
+.slot .sfoot{display:grid;gap:6px;padding:7px 8px 8px}
+.slot .cap{font-size:12px;line-height:1.35}
+.slot .cap b{display:block;font-weight:600}
+.slot .cap span{color:var(--muted)}
+.slot .acts{display:flex;gap:6px;flex-wrap:wrap}
+.slot .acts button,.slot .acts label{border:1px solid var(--line);background:var(--surface-2);color:var(--ink);border-radius:7px;padding:4px 10px;font-size:12.5px;font-weight:600;cursor:pointer;min-height:30px;display:inline-flex;align-items:center}
+.slot .acts label:focus-within{outline:2px solid var(--accent)}
+.field{display:grid;gap:6px}
+.lbl{font-size:12.5px;color:var(--muted);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:13.5px;font-weight:500;min-height:34px}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.chip.fail[aria-pressed="true"]{background:var(--bad);border-color:var(--bad);color:#fff}
+.chip.pass[aria-pressed="true"]{background:var(--ok);border-color:var(--ok);color:#fff}
+.chip:disabled{cursor:default}
+.part{font-size:13.5px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
+.code{font-family:var(--mono);font-size:12px;background:var(--surface-2);border:1px solid var(--line);border-radius:5px;padding:0 6px;color:var(--muted)}
+.foot{border-top:1px solid var(--line);padding-top:10px;display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;font-size:13.5px}
+.foot .miss{color:var(--warn)}
+.foot.done{color:var(--ok)}
+.foot.done span{color:var(--ink)}
+.foot.locked{color:var(--muted)}
+.warnbox{background:var(--bad-soft);color:var(--bad);border-radius:8px;padding:8px 12px;font-size:13px}
+.submit{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
+.submit.ready{border-color:var(--accent);background:var(--accent-soft)}
+.submit p{font-size:14px}
+
+.side{display:grid;gap:12px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:grid;gap:10px;box-shadow:var(--shadow);min-width:0}
+.card h2{font-size:15px;font-weight:700}
+.card h2 small{font-weight:500;color:var(--muted);font-size:12.5px}
+.hand{list-style:none;margin:0;padding:0;display:grid;gap:9px}
+.hand li{display:grid;grid-template-columns:92px minmax(0,1fr);gap:8px;font-size:13px}
+.dept{font-family:var(--mono);font-size:11.5px;font-weight:600;color:var(--accent);background:var(--accent-soft);border-radius:6px;padding:2px 6px;align-self:start;text-align:center}
+.hand .st{display:block;font-size:12px;color:var(--muted)}
+.hand .st.sent{color:var(--ok)}
+.mini{list-style:none;margin:0;padding:0;display:grid;gap:8px;font-size:12.5px}
+.mini li{display:grid;gap:1px;border-left:2px solid var(--line);padding-left:10px}
+.mini .w{color:var(--muted);font-family:var(--mono);font-size:11.5px}
+
+/* tables */
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th{font-size:12.5px;color:var(--muted);font-weight:600;text-align:left;background:var(--surface-2)}
+th,td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:middle;white-space:nowrap}
+td.wrap{white-space:normal;min-width:220px}
+tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.thumbs{display:flex;gap:4px}
+.thumbs button{border:1px solid var(--line);padding:0;border-radius:5px;overflow:hidden;width:44px;height:33px;background:var(--surface-2)}
+.thumbs img{width:100%;height:100%;object-fit:cover;display:block}
+.search{border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:8px 12px;min-width:0;width:min(360px,100%)}
+.sec-h{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between}
+.sec-h h2{font-size:16px}
+.sec-h p{font-size:12.5px;color:var(--muted)}
+
+/* overlay */
+#overlay{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:16px}
+#overlay[hidden],#toast[hidden]{display:none}
+.ov-bg{position:absolute;inset:0;background:rgba(5,15,16,.62)}
+.modal{position:relative;background:var(--surface);border-radius:14px;width:min(560px,100%);max-height:calc(100% - 24px);overflow:auto;padding:18px;display:grid;gap:14px}
+.modal h2{font-size:18px}
+.form{display:grid;gap:12px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.form .full{grid-column:1/-1}
+.form label{display:grid;gap:4px;font-size:13px;color:var(--muted);font-weight:600}
+.form input,.form select{border:1px solid var(--line);background:var(--surface-2);border-radius:8px;padding:9px 10px;color:var(--ink);font-weight:400;min-width:0}
+.form .err{grid-column:1/-1;color:var(--bad);font-size:13px}
+.mrow{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+@media (max-width:520px){.form{grid-template-columns:minmax(0,1fr)}}
+.lightbox{position:relative;width:min(900px,100%);display:grid;gap:8px}
+.lightbox img{width:100%;max-height:78vh;object-fit:contain;border-radius:10px;background:#000}
+.lightbox .lb-cap{color:#fff;font-size:13.5px;display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+.lightbox .lb-cap .btn{color:var(--ink)}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:999px;font-size:13.5px;z-index:60;max-width:calc(100% - 32px)}
+.confirm{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px}
+@media (prefers-reduced-motion:no-preference){.jobcard,.btn,.chip{transition:border-color .15s,background-color .15s}}
+@media (max-width:560px){.brand h1{font-size:18px}.jobhead{padding:14px}.plate.lg .n{font-size:20px}}
+
+/* Technician workspace: one task at a time, with controls in thumb reach. */
+.mobile-only{display:none}
+.job-search{display:grid;gap:6px}
+.job-search .search{width:100%}
+.jc-next{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid var(--line);padding-top:10px;font-size:13px}
+.jc-next span{color:var(--muted)}
+.jc-next b{color:var(--accent);white-space:nowrap}
+.job-extra{width:100%;border-top:1px solid var(--line);padding-top:8px;font-size:13px;color:var(--muted)}
+.job-extra summary{cursor:pointer;font-weight:600}
+.job-extra .meta{padding-top:8px}
+.step-work{display:grid;gap:12px}
+.step-tools{display:flex;gap:10px;align-items:center;justify-content:space-between}
+.step-tools .hint{flex:1}
+.step-tools button{flex:none}
+.technician-quick select{width:100%;min-height:48px;border:1px solid var(--line);border-radius:9px;background:var(--surface);padding:10px;font-size:16px}
+.work-progress{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:12px}
+.work-progress .prog{margin-bottom:12px}
+.work-identity{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;font-size:12px;color:var(--muted)}
+.work-identity strong{font-size:18px;color:var(--ink)}
+.stepnav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.stepnav button{display:grid;justify-items:center;gap:5px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);color:var(--muted);padding:10px 4px;min-height:66px;font-size:12px;font-weight:600}
+.stepnav button[aria-pressed="true"]{border:2px solid var(--accent);padding:9px 3px;background:var(--accent-soft);color:var(--accent)}
+.stepnav .finished{color:var(--ok)}
+.stepnav .stepno{width:24px;height:24px;font-size:12px}
+.mobile-workbar{position:fixed;left:0;right:0;bottom:calc(66px + env(safe-area-inset-bottom,0px));z-index:25;background:var(--surface);border-top:1px solid var(--line);padding:10px 14px;box-shadow:0 -4px 18px rgba(16,40,42,.08)}
+.mobile-workbar p{font-size:12px;color:var(--muted);margin-bottom:6px}
+.mobile-workbar .btn{width:100%;justify-content:center;font-size:16px;min-height:50px}
+.mobile-more{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:12px}
+.mobile-more summary{min-height:28px;cursor:pointer;color:var(--muted);font-size:14px;font-weight:600}
+.mobile-more .side{margin-top:12px}
+.task-checklist{display:flex;flex-wrap:wrap;gap:6px}
+.task-checklist span{font-size:12px;padding:4px 9px;border-radius:6px;background:var(--surface-2);color:var(--muted)}
+.task-checklist .complete{background:var(--ok-soft);color:var(--ok)}
+@media (max-width:640px){
+  body{padding-inline:12px;padding-bottom:calc(86px + env(safe-area-inset-bottom,0px));font-size:16px}
+  body:has(.mobile-workbar){padding-bottom:calc(196px + env(safe-area-inset-bottom,0px))}
+  .mobile-only{display:block}
+  .desktop-only,.flow,.sub .desktop-context{display:none!important}
+  .top{gap:10px;padding:12px 0}
+  .brand h1{font-size:18px}.mod{width:36px;height:36px;border-radius:10px}
+  .brand{gap:9px}.sub{margin-top:4px}.tag{font-size:11px}
+  .who{width:100%;border-radius:10px;padding:5px 10px;font-size:13px}
+  .who select{flex:1;min-width:0;min-height:44px;font-size:16px;background:var(--surface);border-radius:7px;padding:6px 8px}
+  .tabs{position:fixed;z-index:30;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;height:calc(66px + env(safe-area-inset-bottom,0px));padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));border-radius:0;border:0;border-top:1px solid var(--line);background:var(--surface);overflow:visible}
+  .tabs button{justify-content:center;padding:7px 4px;min-width:0;min-height:48px;border:0;border-radius:9px;font-size:13px;gap:4px;white-space:normal}
+  .tabs button[aria-selected="true"]{background:var(--accent-soft);box-shadow:none}
+  .count{padding:0 5px;font-size:11px}
+  main{padding-top:12px;gap:12px;border-top:0}
+  .kpis{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+  .kpi{padding:9px 5px;text-align:center;border-radius:9px}
+  .kpi .k{font-size:11px;white-space:nowrap}.kpi .v{font-size:23px;margin-top:3px}.kpi .v small,.kpi .d{display:none}
+  .demo-note{font-size:12px;padding:7px 10px}
+  .demo-note .demo-long{display:none}
+  .toolbar{gap:10px}.seg{width:100%;display:flex;border-radius:10px;gap:3px}
+  .seg button{flex:1;min-height:46px;padding:7px 5px;border-radius:7px;font-size:13px}
+  .toolbar>.btn{width:100%;justify-content:center}
+  .search,.form input,.form select{font-size:16px;min-height:48px}
+  .job-search .lbl{font-size:14px;color:var(--ink)}
+  .jobgrid{gap:10px;grid-template-columns:minmax(0,1fr)}
+  .jobcard{padding:14px;gap:9px;border-radius:12px}
+  .jc-top{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:start}
+  .jc-car{display:grid;gap:8px;justify-items:start}.jc-car .t{font-size:14px}.jc-car .s{font-size:12px}
+  .jobcard .plate .n{font-size:23px}.jobcard .plate .p{font-size:11px}.jobcard .plate{padding:4px 12px}
+  .jobcard .meta{font-size:11px}.jobcard .meta span:last-child{display:none}
+  .jc-next{font-size:13px}.jc-next span{max-width:70%}.jc-next b{padding:7px 10px;background:var(--accent-soft);border-radius:7px}
+  .btn,.btn.sm,.chip,.slot .acts label,.slot .acts button,.back{min-height:48px}
+  .back{padding:4px 0;font-size:14px;min-height:40px}
+  .jobhead{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;padding:12px;border-radius:12px}
+  .jobhead>.pill{grid-column:1/-1;justify-self:start}.jobhead .plate.lg .n{font-size:22px}.jobhead .plate.lg .p{font-size:11px}
+  .jh-main{min-width:0;gap:3px}.jh-main .t{font-size:14px}.jh-main .meta{font-size:12px}
+  .job-extra{grid-column:1/-1;font-size:12px}.job-extra summary{padding:4px 0}
+  .detail{gap:12px}.steps{gap:12px}
+  .step{padding:14px;border-radius:12px}.step:not(.is-current){display:none}
+  .step-h{gap:9px;flex-wrap:wrap}.step-t{min-width:170px}.step-t h3{font-size:18px}
+  .step-h>.pill{display:none}.step-t .hint{font-size:13px;line-height:1.6}
+  .slots{gap:9px}.slot.empty{min-height:126px;aspect-ratio:auto}
+  label.slot.empty{font-size:14px;padding:10px 7px;border-color:var(--accent);background:var(--accent-soft)}
+  label.slot.empty svg{width:30px;height:30px}.slot.empty .req{font-size:12px}
+  .slot .sfoot{padding:8px}.slot .acts label{width:100%;justify-content:center;font-size:14px}
+  .step-tools{align-items:flex-start}.step-tools .btn{font-size:14px}
+  .part{font-size:13px}.part .code{display:none}.lbl{font-size:14px}
+  .result-choices{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .result-choices .chip{border-radius:9px;font-size:16px;min-height:52px}
+  .technician-quick{display:grid;gap:8px}.technician-quick .btn{justify-content:center;font-size:14px}
+  .foot{gap:10px;font-size:13px}.foot>.btn{width:100%;justify-content:center;font-size:15px}
+  .foot.done{display:grid}.step .foot:not(.done)>.btn{display:none}
+  .submit{font-size:13px;padding:12px}.submit:not(.job-sent){display:none}
+  .detail>.side{display:none}
+  #toast{bottom:calc(180px + env(safe-area-inset-bottom,0px));border-radius:10px;font-size:13px}
+  #overlay{padding:12px}.modal{padding:16px}.mrow{display:grid;grid-template-columns:1fr 1fr;width:100%}.mrow .btn{justify-content:center}
+}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <span class="mod">3.3</span>
+      <div>
+        <h1>ศูนย์บริการ · ช่างเซอร์วิส</h1>
+        <p class="sub"><span class="desktop-context">เมนู 3 ช่าง / ติดตั้ง → 3.3</span> <span class="tag">ต้นแบบ · ข้อมูลตัวอย่าง</span></p>
+      </div>
+    </div>
+    <label class="who" for="user">ผู้ใช้งาน <select id="user"></select></label>
+  </header>
+  <p class="flow">เปิดใบงาน (ทะเบียน + เลขไมล์) → เปลี่ยนกรองหม้อต้ม → เปลี่ยนกรองแก๊ส → ตรวจรั่ว → <b>ส่งงาน</b> → รอเก็บเงิน → ปิดใบงาน · ทุกขั้นลง audit</p>
+  <nav class="tabs" role="tablist" aria-label="มุมมอง">
+    <button type="button" role="tab" data-tab="jobs" id="tab-jobs">งานเซอร์วิส <span class="count" id="cnt-jobs">0</span></button>
+    <button type="button" role="tab" data-tab="history" id="tab-history">ใครทำอะไร</button>
+    <button type="button" role="tab" data-tab="audit" id="tab-audit">บันทึกงาน</button>
+  </nav>
+  <main id="app"></main>
+</div>
+<div id="overlay" hidden></div>
+<div id="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+(function(){
+"use strict";
+const FONT='"IBM Plex Sans Thai Looped","Noto Sans Thai",Tahoma,sans-serif';
+const NEXT_KM=20000, NEXT_MONTHS=12;
+
+/* ---------- master data (ระบบจริงดึงจาก Supabase) ---------- */
+const TECHS=[
+  {id:'htet',name:'HTET AUNG'},{id:'koko',name:'Ko Ko Thura'},{id:'sanwin',name:'SAN WIN'},
+  {id:'thein',name:'THEIN THAN'},{id:'zaw',name:'ZAW MYO OO'}
+];
+const USERS=[{id:'min',name:'Min',dept:'Sales (หน้าร้าน)'}].concat(TECHS.map(t=>({id:t.id,name:t.name,dept:'Production'})));
+const STEP_LIB={
+  reducer:{name:'เปลี่ยนกรองหม้อต้ม',hint:'ปิดวาล์วถัง เดินเครื่องจนแก๊สในสายหมดก่อนถอด ถ่ายตัวเก่าก่อนถอด และถ่ายตัวใหม่หลังขันแน่นแล้ว',
+    slots:[{k:'old',label:'ตัวเก่า (ก่อนถอด)'},{k:'new',label:'ตัวใหม่ (ติดตั้งแล้ว)'}],part:{sku:'FLT-RED-01',name:'ไส้กรองหม้อต้ม',qty:1}},
+  gas:{name:'เปลี่ยนกรองแก๊ส',hint:'ดูลูกศรบนตัวกรองให้ตรงกับทิศทางแก๊สไหล ถ่ายตัวเก่าก่อนถอด และถ่ายตัวใหม่หลังประกอบ',
+    slots:[{k:'old',label:'ตัวเก่า (ก่อนถอด)'},{k:'new',label:'ตัวใหม่ (ติดตั้งแล้ว)'}],part:{sku:'FLT-GAS-01',name:'ไส้กรองแก๊ส',qty:1}},
+  leak:{name:'ตรวจรั่วหลังเปลี่ยน',hint:'เปิดวาล์ว สตาร์ทเครื่อง แล้วตรวจทุกข้อต่อที่ถอดด้วยน้ำสบู่หรือเครื่องตรวจแก๊ส',
+    slots:[{k:'test',label:'ขณะตรวจรั่ว'}],result:true}
+};
+const TEMPLATES={
+  pm:{name:'กรองหม้อต้ม + กรองแก๊ส',steps:['reducer','gas','leak']}
+};
+const STATUS={queue:{t:'รอคิว',c:'info'},doing:{t:'กำลังทำ',c:'warn'},billing:{t:'รอเก็บเงิน',c:'accent'},closed:{t:'ปิดใบงาน',c:'ok'}};
+
+/* ---------- helpers ---------- */
+const dtf=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Bangkok',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
+function fmt(ts){if(!ts)return '—';const p={};dtf.formatToParts(new Date(ts)).forEach(x=>p[x.type]=x.value);return p.day+'/'+p.month+'/'+p.year+' '+p.hour+':'+p.minute;}
+function fmtDate(ts){return fmt(ts).slice(0,10);}
+function fmtTime(ts){return fmt(ts).slice(11);}
+function km(n){return Number(n||0).toLocaleString('en-US');}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function userName(id){const u=USERS.find(x=>x.id===id);return u?u.name:(id||'—');}
+function userDept(id){const u=USERS.find(x=>x.id===id);return u?u.dept:'ระบบ';}
+function isTech(id){return TECHS.some(t=>t.id===id);}
+function mkSteps(tpl){return TEMPLATES[tpl].steps.map(k=>({key:k,tech:null,photos:{},result:null,doneAt:null,doneBy:null}));}
+function addMonths(ts,n){const d=new Date(ts);d.setMonth(d.getMonth()+n);return d.getTime();}
+function plate(job,size){return '<span class="plate'+(size?' '+size:'')+'"><span class="n">'+esc(job.plate)+'</span><span class="p">'+esc(job.province)+'</span></span>';}
+function pill(c,t){return '<span class="pill p-'+c+'">'+esc(t)+'</span>';}
+
+/* ---------- storage (ต้นแบบ: เก็บในเบราว์เซอร์นี้เท่านั้น) ---------- */
+const KEY='htg-service-proto-v2', UIKEY='htg-service-ui-v2';
+let storageFull=false;
+function load(){try{const s=localStorage.getItem(KEY);return s?JSON.parse(s):null;}catch(e){return null;}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state));storageFull=false;}catch(e){storageFull=true;}}
+const ui={tab:'jobs',jobId:null,user:'min',filter:'open',jq:'',step:0,q:'',aq:'',overlay:null,confirmReset:false};
+try{const u=JSON.parse(localStorage.getItem(UIKEY)||'{}');if(u.user&&USERS.some(x=>x.id===u.user))ui.user=u.user;if(u.tab)ui.tab=u.tab;}catch(e){}
+function persistUi(){try{localStorage.setItem(UIKEY,JSON.stringify({user:ui.user,tab:ui.tab}));}catch(e){}}
+
+function seed(){
+  const now=Date.now(),m=60000,h=60*m,d=24*h;
+  const P=(by,at)=>({ph:true,by,at});
+  const S=(key,tech,photos,doneAt,result)=>({key,tech,photos,result:result||null,doneAt:doneAt||null,doneBy:doneAt?tech:null});
+  const jobs=[
+    {id:'SV-2610-0008',plate:'ฒข 7310',province:'กรุงเทพมหานคร',car:'Honda City 2017',gas:'LPG หัวฉีด',km:86200,customer:'คุณวิไลวรรณ ส. (ตัวอย่าง)',tpl:'pm',status:'queue',openedAt:now-25*m,openedBy:'min',steps:mkSteps('pm')},
+    {id:'SV-2610-0007',plate:'3กศ 4821',province:'กรุงเทพมหานคร',car:'Toyota Vios 2019',gas:'LPG หัวฉีด',km:128450,customer:'คุณสมชาย ก. (ตัวอย่าง)',tpl:'pm',status:'doing',openedAt:now-60*m,openedBy:'min',steps:[
+      S('reducer','sanwin',{old:P('sanwin',now-22*m)}),
+      S('gas',null,{}),S('leak',null,{})]},
+    {id:'SV-2610-0006',plate:'7กร 2045',province:'นนทบุรี',car:'Toyota Corolla Altis 2018',gas:'LPG หัวฉีด',km:154900,customer:'คุณประเสริฐ ว. (ตัวอย่าง)',tpl:'pm',status:'billing',openedAt:now-5*h,openedBy:'min',submittedAt:now-2*h-50*m,steps:[
+      S('reducer','zaw',{old:P('zaw',now-4*h-30*m),new:P('zaw',now-4*h-6*m)},now-4*h-4*m),
+      S('gas','koko',{old:P('koko',now-3*h-55*m),new:P('koko',now-3*h-35*m)},now-3*h-33*m),
+      S('leak','koko',{test:P('koko',now-3*h-15*m)},now-3*h-10*m,'pass')]},
+    {id:'SV-2610-0005',plate:'งท 8812',province:'ชลบุรี',car:'Nissan Almera 2016',gas:'LPG หัวฉีด',km:97310,customer:'คุณอรุณี พ. (ตัวอย่าง)',tpl:'pm',status:'closed',openedAt:now-d-6*h,openedBy:'min',submittedAt:now-d-4*h,closedAt:now-d-3*h-40*m,steps:[
+      S('reducer','thein',{old:P('thein',now-d-5*h-40*m),new:P('thein',now-d-5*h-22*m)},now-d-5*h-20*m),
+      S('gas','thein',{old:P('thein',now-d-5*h-10*m),new:P('thein',now-d-4*h-55*m)},now-d-4*h-52*m),
+      S('leak','thein',{test:P('thein',now-d-4*h-30*m)},now-d-4*h-25*m,'pass')]},
+    {id:'SV-2610-0004',plate:'70-4518',province:'สมุทรปราการ',car:'Hino 500 รถบรรทุก 10 ล้อ',gas:'LNG',km:412300,customer:'บจก. ตัวอย่างโลจิสติกส์',tpl:'pm',status:'closed',openedAt:now-3*d-7*h,openedBy:'min',submittedAt:now-3*d-4*h,closedAt:now-3*d-2*h,steps:[
+      S('reducer','htet',{old:P('htet',now-3*d-6*h-40*m),new:P('htet',now-3*d-6*h-15*m)},now-3*d-6*h-12*m),
+      S('gas','htet',{old:P('htet',now-3*d-6*h-5*m),new:P('htet',now-3*d-5*h-20*m)},now-3*d-5*h-15*m),
+      S('leak','htet',{test:P('htet',now-3*d-4*h-40*m)},now-3*d-4*h-30*m,'pass')]}
+  ];
+  const audit=[];
+  const A=(at,by,action,job,detail,dept)=>audit.push({at,by,dept:dept||userDept(by),action,job,detail});
+  jobs.slice().reverse().forEach(j=>{
+    A(j.openedAt,j.openedBy,'เปิดใบงานเซอร์วิส',j.id,TEMPLATES[j.tpl].name+' · '+km(j.km)+' กม.');
+    j.steps.forEach(s=>{
+      Object.keys(s.photos).forEach(k=>{const sl=STEP_LIB[s.key].slots.find(x=>x.k===k);A(s.photos[k].at,s.photos[k].by,'ถ่ายรูป',j.id,STEP_LIB[s.key].name+' · '+sl.label);});
+      if(s.result)A(s.doneAt-60000,s.tech,'บันทึกผลตรวจรั่ว',j.id,'ไม่พบรั่ว');
+      if(s.doneAt)A(s.doneAt,s.doneBy,'บันทึกขั้นตอนเสร็จ',j.id,STEP_LIB[s.key].name+' · ช่าง '+userName(s.tech));
+    });
+    if(j.submittedAt)handoffLogs(j,j.submittedAt,'min').forEach(x=>audit.push(x));
+    if(j.closedAt)A(j.closedAt,'min','ปิดใบงาน',j.id,'รับเงินแล้ว','Accounting');
+  });
+  audit.sort((a,b)=>a.at-b.at).forEach((x,i)=>x.id=i+1);
+  return {v:1,seq:9,jobs,audit};
+}
+
+let state=load()||seed();
+function getJob(id){return state.jobs.find(j=>j.id===id);}
+function log(action,jobId,detail,dept,by){state.audit.push({id:state.audit.length+1,at:Date.now(),by:by||ui.user,dept:dept||userDept(by||ui.user),action,job:jobId||'',detail:detail||''});}
+
+/* ---------- business rules ---------- */
+function jobEditable(j){return j.status==='queue'||j.status==='doing';}
+function lockReason(j,i){
+  const st=j.steps[i];if(st.doneAt)return null;
+  if(st.key==='leak'&&j.steps.some(s=>s.key!=='leak'&&!s.doneAt))return 'เปลี่ยนกรองให้เสร็จทุกขั้นก่อน แล้วค่อยตรวจรั่ว';
+  return null;
+}
+function stepState(j,i){const st=j.steps[i];if(st.doneAt)return 'done';if(lockReason(j,i))return 'locked';if(st.tech||Object.keys(st.photos).length||st.result)return 'active';return 'todo';}
+function missing(j,i){
+  const st=j.steps[i],def=STEP_LIB[st.key],miss=[];
+  def.slots.forEach(s=>{if(!st.photos[s.k])miss.push('รูป'+s.label);});
+  if(!st.tech)miss.push('ชื่อช่าง');
+  if(def.result&&st.result!=='pass')miss.push(st.result==='fail'?'ผลตรวจต้องเป็น "ไม่พบรั่ว"':'ผลตรวจรั่ว');
+  return miss;
+}
+function stepStart(st){const ts=Object.values(st.photos).map(p=>p.at);return ts.length?Math.min.apply(null,ts):null;}
+function stepMin(st){const s=stepStart(st);return st.doneAt&&s?Math.max(1,Math.round((st.doneAt-s)/60000)):null;}
+function doneCount(j){return j.steps.filter(s=>s.doneAt).length;}
+function nextStepIndex(j){const i=j.steps.findIndex(s=>!s.doneAt);return i<0?j.steps.length-1:i;}
+function currentStepIndex(j){return Math.max(0,Math.min(j.steps.length-1,Number(ui.step)||0));}
+function shortStep(key){return {reducer:'กรองหม้อต้ม',gas:'กรองแก๊ส',leak:'ตรวจรั่ว'}[key];}
+function jobTechs(j){const ids=[];j.steps.forEach(s=>{if(s.tech&&ids.indexOf(s.tech)<0)ids.push(s.tech);});return ids;}
+function parts(j){return j.steps.map(s=>STEP_LIB[s.key].part).filter(Boolean);}
+function nextService(j){return {km:j.km+NEXT_KM,date:addMonths(j.submittedAt||Date.now(),NEXT_MONTHS)};}
+function handoff(j){
+  const tc={};j.steps.forEach(s=>{if(s.tech)tc[s.tech]=(tc[s.tech]||0)+1;});
+  const techTxt=Object.keys(tc).map(id=>userName(id)+' ('+tc[id]+' ขั้น)').join(', ')||'ยังไม่ระบุช่าง';
+  const total=j.steps.reduce((a,s)=>a+(stepMin(s)||0),0);
+  const ps=parts(j),ns=nextService(j);
+  return [
+    {dept:'Production',text:'ช่างผู้ทำ: '+techTxt+(total?' · เวลางานรวม '+total+' นาที':'')},
+    {dept:'Inventory',text:ps.length?'ตัดสต๊อก '+ps.map(p=>p.name+' ×'+p.qty).join(' · '):'ไม่มีอะไหล่'},
+    {dept:'Accounting',text:'ส่งอะไหล่ '+ps.length+' รายการ + ค่าแรงเซอร์วิส ไปออกบิล'},
+    {dept:'Support',text:'นัดรอบถัดไป '+km(ns.km)+' กม. หรือ '+fmtDate(ns.date)+' แล้วแต่อย่างไหนถึงก่อน'},
+    {dept:'Sales',text:'อัปเดตประวัติรถและรูปในข้อมูลลูกค้า'}
+  ];
+}
+function handoffLogs(j,at,by){
+  const ps=parts(j),ns=nextService(Object.assign({},j,{submittedAt:at}));
+  return [
+    {at,by,dept:userDept(by),action:'ส่งงาน',job:j.id,detail:'ช่าง: '+jobTechs(j).map(userName).join(', ')},
+    {at,by:'system',dept:'Inventory',action:'ตัดสต๊อกอะไหล่',job:j.id,detail:ps.map(p=>p.sku+' ×'+p.qty).join(', ')},
+    {at,by:'system',dept:'Accounting',action:'สร้างรายการรอเก็บเงิน',job:j.id,detail:'อะไหล่ '+ps.length+' รายการ + ค่าแรง'},
+    {at,by:'system',dept:'Support',action:'ตั้งนัดเซอร์วิสครั้งถัดไป',job:j.id,detail:km(ns.km)+' กม. / '+fmtDate(ns.date)}
+  ];
+}
+
+/* ---------- photos ---------- */
+const phCache={};
+function stamp(g,w,h,l1,l2){
+  const sh=Math.max(40,Math.round(h*0.12)),fs=Math.max(12,Math.round(sh*0.3));
+  g.fillStyle='rgba(0,0,0,.66)';g.fillRect(0,h-sh,w,sh);
+  g.fillStyle='#fff';g.textAlign='left';g.textBaseline='middle';
+  g.font='600 '+fs+'px '+FONT;g.fillText(l1,10,h-sh*0.68,w-20);
+  g.font='400 '+fs+'px '+FONT;g.fillText(l2,10,h-sh*0.28,w-20);
+}
+function stampLines(j,stepKey,label,at,by){return [j.plate+' '+j.province+' · '+STEP_LIB[stepKey].name+' · '+label, fmt(at)+' · '+userName(by)+' · '+j.id];}
+function phSrc(j,stepKey,slotKey,label,p){
+  const k=j.id+'|'+stepKey+'|'+slotKey;if(phCache[k])return phCache[k];
+  const c=document.createElement('canvas');c.width=480;c.height=360;const g=c.getContext('2d');
+  const gr=g.createLinearGradient(0,0,480,360);gr.addColorStop(0,'#45585a');gr.addColorStop(1,'#1f2b2c');g.fillStyle=gr;g.fillRect(0,0,480,360);
+  g.lineWidth=3;g.strokeStyle='#d6e2e2';
+  if(slotKey==='test'){g.fillStyle='#8aa0a2';g.fillRect(110,150,260,26);for(let i=0;i<7;i++){g.beginPath();g.arc(180+i*20,140-(i%3)*10,6+(i%2)*3,0,Math.PI*2);g.strokeStyle='#e8f1f1';g.stroke();}}
+  else{const fresh=slotKey==='new';g.fillStyle=fresh?'#c9d6d7':'#6b5a3c';g.fillRect(195,80,90,160);g.fillStyle=fresh?'#e9f0f0':'#4d4230';for(let y=95;y<235;y+=16)g.fillRect(195,y,90,5);g.fillStyle='#9fb0b1';g.fillRect(225,58,30,22);g.fillRect(225,240,30,22);}
+  g.fillStyle='rgba(255,255,255,.8)';g.textAlign='center';g.textBaseline='alphabetic';g.font='600 16px '+FONT;g.fillText('รูปตัวอย่าง',240,32);
+  const L=stampLines(j,stepKey,label,p.at,p.by);stamp(g,480,360,L[0],L[1]);
+  return phCache[k]=c.toDataURL('image/jpeg',0.82);
+}
+function photoSrc(j,stepKey,slotKey){
+  const st=j.steps.find(s=>s.key===stepKey);const p=st&&st.photos[slotKey];if(!p)return '';
+  if(p.src)return p.src;const sl=STEP_LIB[stepKey].slots.find(s=>s.k===slotKey);return phSrc(j,stepKey,slotKey,sl.label,p);
+}
+function readImage(file){return new Promise((res,rej)=>{const url=URL.createObjectURL(file);const img=new Image();img.onload=()=>res({img,url});img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error('bad'));};img.src=url;});}
+async function processPhoto(file,l1,l2){
+  const r=await readImage(file),img=r.img;const max=960;
+  const s=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));
+  const w=Math.round(img.naturalWidth*s),h=Math.round(img.naturalHeight*s);
+  const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');g.drawImage(img,0,0,w,h);
+  stamp(g,w,h,l1,l2);URL.revokeObjectURL(r.url);return c.toDataURL('image/jpeg',0.72);
+}
+
+/* ---------- icons ---------- */
+const I={
+  cam:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.6-2.2h6.8L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.6"/></svg>',
+  check:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  lock:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+  back:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>',
+  plus:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>'
+};
+
+/* ---------- render ---------- */
+const app=document.getElementById('app'),overlay=document.getElementById('overlay');
+function render(){
+  document.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===ui.tab)));
+  document.getElementById('cnt-jobs').textContent=state.jobs.filter(j=>j.status!=='closed').length;
+  const sel=document.getElementById('user');
+  if(!sel.options.length)sel.innerHTML=USERS.map(u=>'<option value="'+u.id+'">'+esc(u.name)+(u.dept==='Production'?' · ช่าง':' · หน้าร้าน')+'</option>').join('');
+  sel.value=ui.user;
+  let h=storageFull?'<div class="banner-bad">พื้นที่เก็บของเบราว์เซอร์เต็ม รูปที่ถ่ายใหม่จะหายเมื่อรีเฟรช (ระบบจริงเก็บรูปใน Supabase Storage)</div>':'';
+  if(ui.tab==='jobs')h+=ui.jobId&&getJob(ui.jobId)?viewDetail(getJob(ui.jobId)):viewJobs();
+  else if(ui.tab==='history')h+=viewHistory();
+  else h+=viewAudit();
+  app.innerHTML=h;
+  renderOverlay();
+}
+
+function viewJobs(){
+  const today=fmtDate(Date.now());
+  const c=s=>state.jobs.filter(j=>j.status===s).length;
+  const doneToday=state.jobs.filter(j=>j.submittedAt&&fmtDate(j.submittedAt)===today).length;
+  let h='<section class="kpis" aria-label="สรุปวันนี้">'+
+    kpi('รอคิว',c('queue'),'งาน','ยังไม่มีช่างเริ่ม')+
+    kpi('กำลังทำ',c('doing'),'งาน','ช่างกำลังเปลี่ยนกรอง / ตรวจรั่ว',true)+
+    kpi('รอเก็บเงิน',c('billing'),'คัน','ส่งงานแล้ว รอบัญชี')+
+    kpi('เสร็จวันนี้',doneToday,'คัน',today)+'</section>';
+  h+='<label class="job-search" for="jq"><span class="lbl">ค้นหารถที่ต้องทำ</span><input class="search" id="jq" type="search" placeholder="ทะเบียนรถ หรือเลขใบงาน" value="'+esc(ui.jq)+'" autocomplete="off"></label>';
+  h+='<div class="toolbar"><div class="seg" role="group" aria-label="ตัวกรอง">'+
+    (isTech(ui.user)?'<button type="button" data-act="filter" data-v="mine" aria-pressed="'+(ui.filter==='mine')+'">งานของฉัน</button>':'')+
+    '<button type="button" data-act="filter" data-v="open" aria-pressed="'+(ui.filter==='open')+'">'+(isTech(ui.user)?'รอทำ / กำลังทำ':'ยังไม่ปิด')+'</button>'+
+    '<button type="button" data-act="filter" data-v="all" aria-pressed="'+(ui.filter==='all')+'">ทั้งหมด</button></div>'+
+    (!isTech(ui.user)?'<button type="button" class="btn primary" data-act="new">'+I.plus+' เปิดงานเซอร์วิส</button>':'')+'</div>';
+  h+='<div class="jobgrid" id="job-list" aria-live="polite">'+jobsList()+'</div>';
+  h+='<p class="note demo-note">ข้อมูลตัวอย่าง · เก็บในเบราว์เซอร์นี้<span class="demo-long"> · แตะช่องถ่ายรูปบนมือถือเพื่อเปิดกล้องและประทับทะเบียน เวลา ชื่อช่าง</span></p>';
+  return h;
+}
+function jobsList(){
+  const q=ui.jq.trim().toLowerCase();
+  const list=state.jobs.filter(j=>{
+    if(ui.filter==='mine'&&(!jobEditable(j)||!j.steps.some(s=>s.tech===ui.user)))return false;
+    if(ui.filter==='open'&&(isTech(ui.user)?!jobEditable(j):j.status==='closed'))return false;
+    return !q||[j.plate,j.id,j.car].join(' ').toLowerCase().includes(q);
+  }).sort((a,b)=>{const o={doing:0,queue:1,billing:2,closed:3};return (o[a.status]-o[b.status])||(b.openedAt-a.openedAt);});
+  if(!list.length)return '<div class="empty">'+(q?'ไม่พบรถที่ตรงกับคำค้น':ui.filter==='mine'?'ยังไม่มีงานในชื่อคุณ เลือก “รอทำ / กำลังทำ” เพื่อดูงานที่รับได้':'ยังไม่มีงานในรายการนี้')+'</div>';
+  return list.map(jobCard).join('');
+}
+function kpi(k,v,u,d,hl){return '<div class="kpi'+(hl?' hl':'')+'"><div class="k">'+k+'</div><div class="v">'+v+' <small>'+u+'</small></div><div class="d">'+esc(d)+'</div></div>';}
+function jobCard(j){
+  const st=STATUS[j.status],dc=doneCount(j),n=j.steps.length,t=jobTechs(j);
+  const next=j.steps[nextStepIndex(j)];
+  return '<button type="button" class="jobcard" data-act="open" data-id="'+j.id+'">'+
+    '<div class="jc-top"><div class="jc-car">'+plate(j)+'<div><div class="t">'+esc(j.car)+'</div><div class="s">'+esc(j.gas)+' · '+km(j.km)+' กม.</div></div></div>'+pill(st.c,st.t)+'</div>'+
+    '<div class="meta"><span class="mono">'+j.id+'</span><span>'+esc(TEMPLATES[j.tpl].name)+'</span></div>'+
+    '<div class="prog"><span class="bar"><i style="width:'+Math.round(dc/n*100)+'%"></i></span><span class="mono">'+dc+'/'+n+' ขั้น</span></div>'+
+    '<div class="techs">ช่าง: '+(t.length?t.map(id=>'<b>'+esc(userName(id))+'</b>').join(', '):'<span style="color:var(--muted)">ยังไม่มี</span>')+'</div>'+
+    '<div class="jc-next"><span>'+(jobEditable(j)?dc===n?'ทำครบแล้ว พร้อมส่งงาน':'ต่อไป: '+esc(shortStep(next.key)):j.status==='billing'?'ส่งงานแล้ว รอเก็บเงิน':'งานเสร็จเรียบร้อย')+'</span><b>'+(jobEditable(j)?'ทำงานต่อ →':'ดูใบงาน →')+'</b></div>'+
+  '</button>';
+}
+
+function viewDetail(j){
+  const st=STATUS[j.status];
+  let h='<button type="button" class="btn ghost back" data-act="back">'+I.back+' รายการงาน</button>';
+  h+='<section class="jobhead">'+plate(j,'lg')+'<div class="jh-main"><div class="t">'+esc(j.car)+'</div>'+
+    '<div class="meta"><span>'+esc(j.gas)+'</span><span class="mono">'+km(j.km)+' กม.</span></div></div>'+pill(st.c,st.t)+
+    '<details class="job-extra"><summary>รายละเอียดรถและใบงาน · '+esc(j.id)+'</summary><div class="meta"><span>'+esc(j.customer)+'</span><span>'+esc(TEMPLATES[j.tpl].name)+'</span><span>เปิดโดย '+esc(userName(j.openedBy))+' · '+fmt(j.openedAt)+'</span></div></details></section>';
+  h+=stepNavigation(j);
+  h+='<div class="detail"><div class="steps">'+j.steps.map((s,i)=>stepCard(j,i)).join('')+submitBar(j)+'</div>';
+  h+='<aside class="side">'+handoffCard(j)+jobAuditCard(j)+'</aside></div>';
+  h+='<details class="mobile-only mobile-more"><summary>ข้อมูลส่งต่อแผนกและประวัติใบงาน</summary><div class="side">'+handoffCard(j)+jobAuditCard(j)+'</div></details>';
+  h+=mobileWorkbar(j);
+  return h;
+}
+function stepNavigation(j){
+  const dc=doneCount(j),current=currentStepIndex(j);
+  return '<section class="mobile-only work-progress" aria-label="ขั้นตอนงาน"><div class="work-identity"><strong>'+esc(j.plate)+'</strong><span>ทำงานทีละขั้น</span></div><div class="prog"><span>เสร็จ '+dc+'/'+j.steps.length+' ขั้น</span><span class="bar"><i style="width:'+Math.round(dc/j.steps.length*100)+'%"></i></span></div><div class="stepnav">'+
+    j.steps.map((s,i)=>'<button type="button" data-act="step-focus" data-step="'+i+'" aria-pressed="'+(current===i)+'" class="'+(s.doneAt?'finished':'')+'"><span class="stepno">'+(s.doneAt?I.check:i+1)+'</span>'+esc(shortStep(s.key))+'</button>').join('')+'</div></section>';
+}
+function mobileWorkbar(j){
+  if(!jobEditable(j))return '';
+  const i=currentStepIndex(j),s=j.steps[i],def=STEP_LIB[s.key];
+  let label='',act='',extra='',hint=shortStep(s.key)+' · '+j.plate;
+  if(doneCount(j)===j.steps.length){label='ส่งงานให้หน้าร้าน';act='submit';hint='ครบ 3 ขั้นแล้ว · '+j.plate;}
+  else if(s.doneAt||lockReason(j,i)){label='ไปขั้นที่ต้องทำต่อ';act='step-next';}
+  else {
+    const slot=def.slots.find(x=>!s.photos[x.k]);
+    if(slot){label='ถ่ายรูป'+(slot.k==='old'?'ตัวเก่า':slot.k==='new'?'ตัวใหม่':'ขณะตรวจรั่ว');act='capture-next';extra=' data-slot="'+slot.k+'"';hint='เหลือรูป '+def.slots.filter(x=>!s.photos[x.k]).length+' รูป · '+j.plate;}
+    else if(!s.tech){label='เลือกช่างผู้ทำ';act='focus-tech';}
+    else if(def.result&&s.result!=='pass'){label=s.result==='fail'?'แก้รั่วแล้วตรวจซ้ำ':'เลือกผลตรวจรั่ว';act='focus-result';}
+    else {label='บันทึกขั้นนี้เสร็จ';act='done';hint='รูปและข้อมูลครบแล้ว · '+shortStep(s.key);}
+  }
+  return '<div class="mobile-only mobile-workbar"><p>'+esc(hint)+'</p><button type="button" class="btn primary" data-act="'+act+'" data-step="'+i+'"'+extra+'>'+esc(label)+'</button></div>';
+}
+function stepCard(j,i){
+  const st=j.steps[i],def=STEP_LIB[st.key],state=stepState(j,i),lock=lockReason(j,i);
+  const editable=jobEditable(j)&&state!=='done'&&state!=='locked';
+  const pm={done:['เสร็จแล้ว','ok'],active:['กำลังทำ','warn'],todo:['ยังไม่เริ่ม','muted'],locked:['รอขั้นก่อนหน้า','muted']}[state];
+  let h='<article class="step s-'+state+(i===currentStepIndex(j)?' is-current':'')+'" id="step-'+i+'"><header class="step-h"><span class="stepno">'+(state==='done'?I.check:(i+1))+'</span>'+
+    '<div class="step-t"><h3>'+esc(def.name)+'</h3><p class="hint">'+esc(def.hint)+'</p></div>'+pill(pm[1],pm[0])+'</header>';
+  h+='<div class="step-work">';
+  if(editable)h+='<div class="task-checklist" aria-label="สิ่งที่ต้องมี">'+def.slots.map(s=>'<span class="'+(st.photos[s.k]?'complete':'')+'">'+(st.photos[s.k]?'✓ ':'○ ')+esc(s.k==='old'?'รูปตัวเก่า':s.k==='new'?'รูปตัวใหม่':'รูปตรวจรั่ว')+'</span>').join('')+'<span class="'+(st.tech?'complete':'')+'">'+(st.tech?'✓ ':'○ ')+'ชื่อช่าง</span>'+(def.result?'<span class="'+(st.result==='pass'?'complete':'')+'">'+(st.result==='pass'?'✓ ':'○ ')+'ผลตรวจ</span>':'')+'</div>';
+  h+='<div class="slots">'+def.slots.map(s=>slotTile(j,i,s,editable)).join('')+'</div>';
+  if(def.part)h+='<p class="part"><span class="lbl">อะไหล่ที่ใช้</span><span>'+esc(def.part.name)+' ×'+def.part.qty+'</span><span class="code">'+def.part.sku+'</span></p>';
+  if(def.result)h+=resultPick(j,i,editable);
+  h+=techPick(j,i,editable);
+  h+=stepFoot(j,i,state,lock);
+  return h+'</div></article>';
+}
+function slotTile(j,i,s,editable){
+  const st=j.steps[i],p=st.photos[s.k],id='f-'+i+'-'+s.k;
+  const input='<input class="vh" type="file" accept="image/*" capture="environment" aria-label="ถ่ายรูป '+esc(s.label)+'" id="'+id+'" data-step="'+i+'" data-slot="'+s.k+'">';
+  if(!p){
+    if(!editable)return '<div class="slot missing">'+esc(s.label)+'<span>ยังไม่มีรูป</span></div>';
+    return '<label class="slot empty" for="'+id+'">'+I.cam+'<span>ถ่ายรูป: '+esc(s.label)+'</span><span class="req">จำเป็น</span>'+input+'</label>';
+  }
+  const v='data-act="view" data-id="'+j.id+'" data-step="'+i+'" data-slot="'+s.k+'"';
+  return '<div class="slot filled"><button type="button" class="ph" '+v+' aria-label="ดูรูป '+esc(s.label)+'"><img src="'+photoSrc(j,st.key,s.k)+'" alt="'+esc(STEP_LIB[st.key].name+' '+s.label)+'"></button>'+
+    '<div class="sfoot"><div class="cap"><b>'+esc(s.label)+'</b><span>'+fmtTime(p.at)+' · '+esc(userName(p.by))+'</span></div>'+
+    (editable?'<div class="acts"><label for="'+id+'">ถ่ายใหม่'+input+'</label></div>':'')+'</div></div>';
+}
+function resultPick(j,i,editable){
+  const st=j.steps[i];
+  let h='<div class="field" id="result-'+i+'"><span class="lbl">ผลตรวจรั่ว</span><div class="chips result-choices">'+
+    '<button type="button" class="chip pass" data-act="result" data-step="'+i+'" data-v="pass" aria-pressed="'+(st.result==='pass')+'"'+(editable?'':' disabled')+'>ไม่พบรั่ว</button>'+
+    '<button type="button" class="chip fail" data-act="result" data-step="'+i+'" data-v="fail" aria-pressed="'+(st.result==='fail')+'"'+(editable?'':' disabled')+'>พบรั่ว</button></div></div>';
+  if(st.result==='fail')h+='<p class="warnbox">พบรั่ว: แก้ไขจุดรั่ว ถ่ายรูปใหม่ แล้วตรวจซ้ำจนได้ผล "ไม่พบรั่ว" จึงจะปิดขั้นนี้ได้</p>';
+  return h;
+}
+function techPick(j,i,editable){
+  const st=j.steps[i],def=STEP_LIB[st.key],lbl=def.techLabel||'ช่างผู้ทำ';
+  if(!editable)return '<div class="field"><span class="lbl">'+lbl+'</span><div class="chips">'+(st.tech?'<span class="chip" aria-pressed="true">'+esc(userName(st.tech))+'</span>':'<span style="color:var(--muted);font-size:13px">ยังไม่ระบุ</span>')+'</div></div>';
+  return '<div class="field" id="tech-'+i+'"><span class="lbl">'+lbl+'</span><div class="mobile-only technician-quick">'+
+    (isTech(ui.user)?'<button type="button" class="btn'+(st.tech===ui.user?' primary':'')+'" data-act="tech" data-step="'+i+'" data-tech="'+ui.user+'" aria-pressed="'+(st.tech===ui.user)+'">'+(st.tech===ui.user?'✓ ':'')+'ฉันทำขั้นนี้ · '+esc(userName(ui.user))+'</button>':'')+
+    '<select data-tech-select="'+i+'" aria-label="เลือกช่างผู้ทำ '+esc(def.name)+'"><option value="">เลือกชื่อช่างผู้ทำ</option>'+TECHS.map(t=>'<option value="'+t.id+'"'+(st.tech===t.id?' selected':'')+'>'+esc(t.name)+'</option>').join('')+'</select></div><div class="chips desktop-only" role="group" aria-label="'+lbl+'">'+
+    TECHS.map(t=>'<button type="button" class="chip" data-act="tech" data-step="'+i+'" data-tech="'+t.id+'" aria-pressed="'+(st.tech===t.id)+'">'+esc(t.name)+'</button>').join('')+'</div></div>';
+}
+function stepFoot(j,i,state,lock){
+  const st=j.steps[i];
+  if(state==='done'){
+    const mins=stepMin(st);
+    return '<div class="foot done"><span>'+I.check+' เสร็จโดย <b>'+esc(userName(st.tech))+'</b> · '+fmt(st.doneAt)+(mins?' · ใช้เวลา '+mins+' นาที':'')+(st.doneBy&&st.doneBy!==st.tech?' · บันทึกโดย '+esc(userName(st.doneBy)):'')+'</span>'+
+      (jobEditable(j)?'<button type="button" class="btn sm" data-act="reopen" data-step="'+i+'">เปิดแก้ไข</button>':'')+'</div>';
+  }
+  if(state==='locked')return '<div class="foot locked"><span>'+I.lock+' '+esc(lock)+'</span></div>';
+  const miss=missing(j,i);
+  return '<div class="foot"><span class="'+(miss.length?'miss':'')+'">'+(miss.length?'ยังขาด: '+esc(miss.join(', ')):'ครบแล้ว กดบันทึกเพื่อปิดขั้นนี้')+'</span>'+
+    '<button type="button" class="btn primary sm" data-act="done" data-step="'+i+'"'+(miss.length?' disabled':'')+'>'+I.check+' บันทึกขั้นนี้เสร็จ</button></div>';
+}
+function submitBar(j){
+  const dc=doneCount(j),n=j.steps.length;
+  if(j.status==='billing')return '<div class="submit job-sent"><p>ส่งงานแล้ว '+fmt(j.submittedAt)+' · รอบัญชีรับเงิน</p>'+(!isTech(ui.user)?'<button type="button" class="btn primary" data-act="close-job">ปิดใบงาน (รับเงินแล้ว)</button>':'')+'</div>';
+  if(j.status==='closed')return '<div class="submit job-sent"><p>'+I.check+' ปิดใบงานแล้ว '+fmt(j.closedAt)+'</p></div>';
+  const ready=dc===n;
+  return '<div class="submit'+(ready?' ready':'')+'"><p>'+(ready?'ครบทุกขั้นแล้ว พร้อมส่งงาน':'ส่งงานได้เมื่อครบทุกขั้น ตอนนี้ '+dc+'/'+n+' ขั้น')+'</p>'+
+    '<button type="button" class="btn primary" data-act="submit"'+(ready?'':' disabled')+'>ส่งงาน</button></div>';
+}
+function handoffCard(j){
+  const sent=!!j.submittedAt;
+  return '<section class="card"><h2>ส่งต่อ 5 แผนก <small>'+(sent?'· ส่งแล้ว':'· ส่งอัตโนมัติเมื่อกดส่งงาน')+'</small></h2><ul class="hand">'+
+    handoff(j).map(x=>'<li><span class="dept">'+x.dept+'</span><span>'+esc(x.text)+'<span class="st'+(sent?' sent':'')+'">'+(sent?'ส่งแล้ว '+fmt(j.submittedAt):'รอส่งงาน')+'</span></span></li>').join('')+'</ul></section>';
+}
+function jobAuditCard(j){
+  const rows=state.audit.filter(a=>a.job===j.id).slice(-8).reverse();
+  return '<section class="card"><h2>บันทึกของใบงานนี้ <small>· ล่าสุด '+rows.length+' รายการ</small></h2><ul class="mini">'+
+    rows.map(a=>'<li><span class="w">'+fmt(a.at)+' · '+esc(a.by==='system'?'ระบบ → '+a.dept:userName(a.by))+'</span><span><b>'+esc(a.action)+'</b> '+esc(a.detail)+'</span></li>').join('')+
+    '</ul><button type="button" class="btn sm" data-act="goaudit" data-id="'+j.id+'">ดู audit ทั้งหมดของใบงานนี้</button></section>';
+}
+
+/* history: who did what */
+function historyRows(){
+  const rows=[];
+  state.jobs.forEach(j=>j.steps.forEach((s,i)=>{if(s.doneAt)rows.push({j,s,i});}));
+  rows.sort((a,b)=>b.s.doneAt-a.s.doneAt);
+  const q=ui.q.trim().toLowerCase();
+  return q?rows.filter(r=>[r.j.plate,r.j.id,r.j.car,userName(r.s.tech),STEP_LIB[r.s.key].name].join(' ').toLowerCase().indexOf(q)>-1):rows;
+}
+function historyBody(){
+  const rows=historyRows();
+  if(!rows.length)return '<tr><td colspan="6" style="color:var(--muted)">ไม่พบรายการที่ตรงกับคำค้น</td></tr>';
+  return rows.map(r=>{
+    const def=STEP_LIB[r.s.key];
+    return '<tr><td class="mono">'+fmt(r.s.doneAt)+'</td><td><button type="button" class="link mono" data-act="open" data-id="'+r.j.id+'">'+r.j.id+'</button></td><td>'+plate(r.j,'sm')+'</td>'+
+      '<td>'+esc(def.name)+(r.s.result==='pass'?' · ไม่พบรั่ว':'')+'</td><td><b>'+esc(userName(r.s.tech))+'</b></td>'+
+      '<td><div class="thumbs">'+def.slots.filter(s=>r.s.photos[s.k]).map(s=>'<button type="button" data-act="view" data-id="'+r.j.id+'" data-step="'+r.i+'" data-slot="'+s.k+'" aria-label="ดูรูป '+esc(s.label)+'"><img src="'+photoSrc(r.j,r.s.key,s.k)+'" alt=""></button>').join('')+'</div></td></tr>';
+  }).join('');
+}
+function viewHistory(){
+  const now=Date.now(),wk=now-7*24*3600000,today=fmtDate(now);
+  const sum=TECHS.map(t=>{
+    const steps=[];state.jobs.forEach(j=>j.steps.forEach(s=>{if(s.doneAt&&s.tech===t.id)steps.push({j,s});}));
+    const c=k=>steps.filter(x=>x.s.key===k).length;
+    const mins=steps.map(x=>stepMin(x.s)).filter(Boolean);
+    const filt=steps.filter(x=>x.s.key==='reducer'||x.s.key==='gas');
+    const fm=filt.map(x=>stepMin(x.s)).filter(Boolean);
+    return {t,today:steps.filter(x=>fmtDate(x.s.doneAt)===today).length,week:steps.filter(x=>x.s.doneAt>=wk).length,red:c('reducer'),gas:c('gas'),leak:c('leak'),
+      jobs:new Set(steps.map(x=>x.j.id)).size,avg:fm.length?Math.round(fm.reduce((a,b)=>a+b,0)/fm.length):null,last:steps.length?Math.max.apply(null,steps.map(x=>x.s.doneAt)):null};
+  });
+  let h='<section class="sec-h"><div><h2>สรุปรายช่าง</h2><p>นับจากขั้นตอนที่กดบันทึกเสร็จแล้วเท่านั้น · ใช้ทำ KPI ช่าง</p></div></section>';
+  h+='<div class="tbl"><table><thead><tr><th>ช่าง</th><th class="num">ขั้นวันนี้</th><th class="num">7 วัน</th><th class="num">กรองหม้อต้ม</th><th class="num">กรองแก๊ส</th><th class="num">ตรวจรั่ว</th><th class="num">จำนวนคัน</th><th class="num">เฉลี่ย/กรอง</th><th>ล่าสุด</th></tr></thead><tbody>'+
+    sum.map(x=>'<tr><td><b>'+esc(x.t.name)+'</b></td><td class="num">'+x.today+'</td><td class="num">'+x.week+'</td><td class="num">'+x.red+'</td><td class="num">'+x.gas+'</td><td class="num">'+x.leak+'</td><td class="num">'+x.jobs+'</td><td class="num">'+(x.avg?x.avg+' นาที':'—')+'</td><td class="mono">'+fmt(x.last)+'</td></tr>').join('')+
+    '</tbody></table></div>';
+  h+='<section class="sec-h"><div><h2>ใครทำอะไร (รายขั้นตอน)</h2><p>ค้นด้วยทะเบียน เลขใบงาน ชื่อช่าง หรือชื่อขั้นตอน · กดรูปเพื่อดูภาพเต็ม</p></div>'+
+    '<input class="search" id="hq" type="search" placeholder="เช่น 3กศ, SAN WIN, กรองแก๊ส" value="'+esc(ui.q)+'" aria-label="ค้นหาประวัติ"></section>';
+  h+='<div class="tbl"><table><thead><tr><th>เสร็จเมื่อ</th><th>ใบงาน</th><th>ทะเบียน</th><th>ขั้นตอน</th><th>ช่างผู้ทำ</th><th>รูป</th></tr></thead><tbody id="histBody">'+historyBody()+'</tbody></table></div>';
+  return h;
+}
+
+/* audit */
+function auditBody(){
+  const q=ui.aq.trim().toLowerCase();
+  let rows=state.audit.slice().reverse();
+  if(q)rows=rows.filter(a=>[a.job,a.action,a.detail,a.dept,a.by==='system'?'ระบบ':userName(a.by)].join(' ').toLowerCase().indexOf(q)>-1);
+  if(!rows.length)return '<tr><td colspan="6" style="color:var(--muted)">ไม่พบรายการ</td></tr>';
+  return rows.map(a=>'<tr><td class="mono">'+fmt(a.at)+'</td><td>'+esc(a.by==='system'?'ระบบ (อัตโนมัติ)':userName(a.by))+'</td><td><span class="dept">'+esc(a.dept)+'</span></td><td><b>'+esc(a.action)+'</b></td><td class="mono">'+esc(a.job)+'</td><td class="wrap">'+esc(a.detail)+'</td></tr>').join('');
+}
+function viewAudit(){
+  let h='<section class="sec-h"><div><h2>Audit log</h2><p>บันทึกทุกการกระทำ: เวลา (UTC+7) · ผู้ดำเนินการ · แผนก · การกระทำ · เพิ่มได้อย่างเดียว แก้ไขหรือลบไม่ได้</p></div>'+
+    '<input class="search" id="aq" type="search" placeholder="ค้นด้วยเลขใบงาน ชื่อ หรือการกระทำ" value="'+esc(ui.aq)+'" aria-label="ค้นหา audit"></section>';
+  h+='<div class="tbl"><table><thead><tr><th>เวลา</th><th>ผู้ดำเนินการ</th><th>แผนก</th><th>การกระทำ</th><th>ใบงาน</th><th>รายละเอียด</th></tr></thead><tbody id="auditBody">'+auditBody()+'</tbody></table></div>';
+  h+='<div class="note confirm">'+(ui.confirmReset?'<span>ล้างข้อมูลที่ทดลองทั้งหมดและกลับไปใช้ข้อมูลตัวอย่าง?</span><button type="button" class="btn sm danger" data-act="reset-yes">ยืนยันล้างข้อมูล</button><button type="button" class="btn sm" data-act="reset-no">ยกเลิก</button>':
+    '<span>ต้นแบบนี้มีปุ่มล้างข้อมูลไว้ทดลองเท่านั้น ระบบจริงต้องไม่มีปุ่มนี้</span><button type="button" class="btn sm" data-act="reset">ล้างข้อมูลทดลอง</button>')+'</div>';
+  return h;
+}
+
+/* overlay: new job + lightbox */
+function renderOverlay(){
+  const o=ui.overlay;
+  if(!o){overlay.hidden=true;overlay.innerHTML='';return;}
+  overlay.hidden=false;
+  if(o.type==='photo'){
+    overlay.innerHTML='<div class="ov-bg" data-act="close"></div><div class="lightbox" role="dialog" aria-modal="true" aria-label="รูปภาพ"><img src="'+o.src+'" alt="'+esc(o.cap)+'"><div class="lb-cap"><span>'+esc(o.cap)+'</span><button type="button" class="btn sm" data-act="close">ปิด</button></div></div>';
+    return;
+  }
+  if(o.type==='new'&&!overlay.querySelector('#newjob')){
+    overlay.innerHTML='<div class="ov-bg" data-act="close"></div><div class="modal" role="dialog" aria-modal="true" aria-labelledby="nj-h"><h2 id="nj-h">เปิดงานเซอร์วิส</h2>'+
+      '<form id="newjob" class="form" novalidate>'+
+      '<label>ทะเบียนรถ<input id="nj-plate" required placeholder="เช่น 3กศ 4821" autocomplete="off"></label>'+
+      '<label>จังหวัด<input id="nj-prov" list="provs" value="กรุงเทพมหานคร"></label>'+
+      '<datalist id="provs"><option value="กรุงเทพมหานคร"><option value="นนทบุรี"><option value="ปทุมธานี"><option value="สมุทรปราการ"><option value="ชลบุรี"></datalist>'+
+      '<label>ยี่ห้อ / รุ่น / ปี<input id="nj-car" placeholder="เช่น Toyota Vios 2019"></label>'+
+      '<label>ระบบแก๊ส<select id="nj-gas"><option>LPG หัวฉีด</option><option>LPG ระบบดูด</option><option>LNG</option></select></label>'+
+      '<label>เลขไมล์ (กม.)<input id="nj-km" inputmode="numeric" placeholder="เช่น 128450"></label>'+
+      '<label>ลูกค้า<input id="nj-cust" placeholder="ชื่อลูกค้า"></label>'+
+      '<p class="full hint">งานที่ช่างต้องทำ: เปลี่ยนกรองหม้อต้ม → เปลี่ยนกรองแก๊ส → ตรวจรั่ว</p>'+
+      '<p class="err" id="nj-err" hidden></p>'+
+      '<div class="full mrow"><button type="button" class="btn" data-act="close">ยกเลิก</button><button type="submit" class="btn primary">เปิดใบงาน</button></div>'+
+      '</form></div>';
+    setTimeout(()=>{const el=document.getElementById('nj-plate');if(el)el.focus();},30);
+  }
+}
+
+/* ---------- actions ---------- */
+let toastT;
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2600);}
+function startIfQueued(j){if(j.status==='queue'){j.status='doing';log('เริ่มงาน',j.id,'สถานะ รอคิว → กำลังทำ');}}
+function commit(msg){save();render();if(msg)toast(msg);}
+function focusWork(){
+  if(!window.matchMedia('(max-width:640px)').matches)return;
+  const el=document.querySelector('.work-progress');
+  if(el)el.scrollIntoView({block:'start',behavior:'instant'});
+}
+function focusField(id,selector){
+  const el=document.getElementById(id);if(!el)return;
+  el.scrollIntoView({block:'center',behavior:'instant'});
+  const control=el.querySelector(selector);if(control)control.focus({preventScroll:true});
+}
+
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-act],[data-tab]');if(!t||t.disabled)return;
+  if(t.dataset.tab){ui.tab=t.dataset.tab;ui.jobId=null;ui.confirmReset=false;persistUi();render();window.scrollTo(0,0);return;}
+  const a=t.dataset.act,j=ui.jobId?getJob(ui.jobId):null,i=t.dataset.step!=null?Number(t.dataset.step):null;
+  switch(a){
+    case 'filter':ui.filter=t.dataset.v;render();break;
+    case 'open':ui.tab='jobs';ui.jobId=t.dataset.id;ui.step=nextStepIndex(getJob(ui.jobId));persistUi();render();window.scrollTo(0,0);focusWork();break;
+    case 'back':ui.jobId=null;render();window.scrollTo(0,0);break;
+    case 'step-focus':ui.step=i;render();focusWork();break;
+    case 'step-next':ui.step=nextStepIndex(j);render();focusWork();break;
+    case 'capture-next':{
+      if(!jobEditable(j)||j.steps[i].doneAt||lockReason(j,i))return;
+      const fileInput=document.getElementById('f-'+i+'-'+t.dataset.slot);if(fileInput)fileInput.click();break;
+    }
+    case 'focus-tech':focusField('tech-'+i,'.technician-quick select');break;
+    case 'focus-result':focusField('result-'+i,'button');break;
+    case 'new':ui.overlay={type:'new'};renderOverlay();break;
+    case 'close':ui.overlay=null;renderOverlay();break;
+    case 'view':{const jj=getJob(t.dataset.id),s=jj.steps[i],sl=STEP_LIB[s.key].slots.find(x=>x.k===t.dataset.slot),p=s.photos[sl.k];
+      ui.overlay={type:'photo',src:photoSrc(jj,s.key,sl.k),cap:jj.plate+' · '+STEP_LIB[s.key].name+' · '+sl.label+' · ถ่ายโดย '+userName(p.by)+' · '+fmt(p.at)};renderOverlay();break;}
+    case 'tech':{const s=j.steps[i];s.tech=t.dataset.tech;startIfQueued(j);log('ระบุช่างผู้ทำ',j.id,STEP_LIB[s.key].name+' → '+userName(s.tech));commit();break;}
+    case 'result':{const s=j.steps[i];s.result=t.dataset.v;startIfQueued(j);log('บันทึกผลตรวจรั่ว',j.id,s.result==='pass'?'ไม่พบรั่ว':'พบรั่ว ต้องแก้ไขและตรวจซ้ำ');commit();break;}
+    case 'done':{const s=j.steps[i];if(!jobEditable(j)||s.doneAt||lockReason(j,i)||missing(j,i).length)return;s.doneAt=Date.now();s.doneBy=ui.user;
+      log('บันทึกขั้นตอนเสร็จ',j.id,STEP_LIB[s.key].name+' · ช่าง '+userName(s.tech));ui.step=nextStepIndex(j);commit('บันทึก "'+STEP_LIB[s.key].name+'" เสร็จแล้ว');focusWork();break;}
+    case 'reopen':{const s=j.steps[i];s.doneAt=null;s.doneBy=null;log('เปิดขั้นตอนแก้ไข',j.id,STEP_LIB[s.key].name);
+      if(s.key!=='leak'){const L=j.steps.find(x=>x.key==='leak');if(L&&(L.doneAt||L.result)){L.doneAt=null;L.doneBy=null;L.result=null;log('ยกเลิกผลตรวจรั่วเดิม',j.id,'ต้องตรวจรั่วซ้ำหลังแก้ไข '+STEP_LIB[s.key].name);}}
+      ui.step=i;commit('เปิดแก้ไขแล้ว');focusWork();break;}
+    case 'submit':{if(!jobEditable(j)||doneCount(j)!==j.steps.length)return;const at=Date.now();j.status='billing';j.submittedAt=at;
+      handoffLogs(j,at,ui.user).forEach(x=>{x.id=state.audit.length+1;state.audit.push(x);});commit('ส่งงานแล้ว ส่งต่อ Inventory · Accounting · Support เรียบร้อย');break;}
+    case 'close-job':{j.status='closed';j.closedAt=Date.now();log('ปิดใบงาน',j.id,'รับเงินแล้ว','Accounting');commit('ปิดใบงานแล้ว');break;}
+    case 'goaudit':ui.tab='audit';ui.aq=t.dataset.id;ui.jobId=null;persistUi();render();window.scrollTo(0,0);break;
+    case 'reset':ui.confirmReset=true;render();break;
+    case 'reset-no':ui.confirmReset=false;render();break;
+    case 'reset-yes':state=seed();ui.confirmReset=false;ui.q='';ui.aq='';for(const k in phCache)delete phCache[k];commit('กลับไปใช้ข้อมูลตัวอย่างแล้ว');break;
+  }
+});
+
+document.addEventListener('change',async e=>{
+  const el=e.target;
+  if(el.id==='user'){ui.user=el.value;ui.filter='open';persistUi();render();toast('ใช้งานในชื่อ '+userName(ui.user));return;}
+  if(el.dataset.techSelect!=null){
+    const j=getJob(ui.jobId),i=Number(el.dataset.techSelect);
+    if(!j||!jobEditable(j)||j.steps[i].doneAt||lockReason(j,i))return;
+    if(el.value&&!TECHS.some(t=>t.id===el.value))return;
+    j.steps[i].tech=el.value||null;startIfQueued(j);log(el.value?'ระบุช่างผู้ทำ':'ล้างชื่อช่างผู้ทำ',j.id,STEP_LIB[j.steps[i].key].name+' → '+userName(el.value));commit();return;
+  }
+  if(!(el.matches&&el.matches('input[type=file][data-slot]')))return;
+  const file=el.files&&el.files[0];if(!file)return;
+  const j=getJob(ui.jobId);if(!j)return;
+  const i=Number(el.dataset.step),s=j.steps[i],def=STEP_LIB[s.key],sl=def.slots.find(x=>x.k===el.dataset.slot);
+  toast('กำลังบันทึกรูป…');
+  try{
+    const at=Date.now(),L=stampLines(j,s.key,sl.label,at,ui.user);
+    const src=await processPhoto(file,L[0],L[1]);
+    const replaced=!!s.photos[sl.k];
+    s.photos[sl.k]={src,at,by:ui.user};
+    startIfQueued(j);
+    log(replaced?'ถ่ายรูปใหม่แทนรูปเดิม':'ถ่ายรูป',j.id,def.name+' · '+sl.label);
+    if(!s.tech&&isTech(ui.user)){s.tech=ui.user;log('ระบุช่างผู้ทำ',j.id,def.name+' → '+userName(ui.user)+' (อัตโนมัติจากผู้ถ่ายรูป)');}
+    commit(replaced?'แทนรูปเดิมแล้ว':'บันทึกรูปแล้ว');
+  }catch(err){toast('อ่านไฟล์รูปไม่ได้ ลองถ่ายใหม่หรือเลือกไฟล์ JPG/PNG');}
+});
+
+document.addEventListener('input',e=>{
+  if(e.target.id==='jq'){ui.jq=e.target.value;document.getElementById('job-list').innerHTML=jobsList();}
+  if(e.target.id==='hq'){ui.q=e.target.value;document.getElementById('histBody').innerHTML=historyBody();}
+  if(e.target.id==='aq'){ui.aq=e.target.value;document.getElementById('auditBody').innerHTML=auditBody();}
+});
+
+document.addEventListener('submit',e=>{
+  if(e.target.id!=='newjob')return;e.preventDefault();
+  const v=id=>document.getElementById(id).value.trim();
+  const err=document.getElementById('nj-err');
+  const pl=v('nj-plate'),kmv=Number(v('nj-km').replace(/[,\s]/g,''));
+  if(!pl){err.textContent='กรอกทะเบียนรถก่อน';err.hidden=false;return;}
+  if(!kmv||kmv<0){err.textContent='กรอกเลขไมล์เป็นตัวเลข เช่น 128450';err.hidden=false;return;}
+  const id='SV-2610-'+String(state.seq++).padStart(4,'0'),tpl='pm';
+  const j={id,plate:pl,province:v('nj-prov')||'—',car:v('nj-car')||'ไม่ระบุรุ่น',gas:v('nj-gas'),km:kmv,customer:v('nj-cust')||'ลูกค้าหน้าร้าน',tpl,status:'queue',openedAt:Date.now(),openedBy:ui.user,steps:mkSteps(tpl)};
+  state.jobs.push(j);log('เปิดใบงานเซอร์วิส',id,TEMPLATES[tpl].name+' · '+km(kmv)+' กม.');
+  ui.overlay=null;ui.jobId=id;ui.step=0;ui.tab='jobs';commit('เปิดใบงาน '+id+' แล้ว');window.scrollTo(0,0);
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&ui.overlay){ui.overlay=null;renderOverlay();}});
+
+render();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{for(const k in phCache)delete phCache[k];render();});
+})();
+</script>
+
+</body>
+</html>
