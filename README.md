@@ -1,7 +1,11 @@
-# HTG Service mobile prototype
+# HTG Service technician web module
 
-Open the website: https://shutshavarnsu-maker.github.io/htg-service-web/
+Website: https://shutshavarnsu-maker.github.io/htg-service-web/
 
-This repository publishes only the technician website. All displayed jobs are sample data.
-Changes and photos are stored in each browser; this prototype does not connect to Supabase.
-Backend migrations and project documentation are maintained in the public htg-service repository.
+Authenticated shared-data application connected to the htg-dev Supabase project.
+DEV validation only: no ERP stock deduction, billing or receipt is performed.
+Only assigned permanent staff accounts can access jobs and private photos.
+Submission creates a pending integration event; acknowledgement requires a trusted server adapter.
+Source, migrations and integration instructions: https://github.com/shutshavarnsu-maker/htg-service
+
+Published files are generated from web/ using npm run build, not the historical local-only prototype.
